@@ -14,7 +14,6 @@ import (
 	"github.com/mattermost/morph/drivers"
 	"github.com/mattermost/morph/drivers/mysql"
 	"github.com/mattermost/morph/drivers/postgres"
-	"github.com/mattermost/morph/drivers/sqlite"
 	"github.com/mattermost/morph/models"
 	"github.com/mattermost/morph/sources"
 	"github.com/mattermost/morph/testlib"
@@ -34,10 +33,6 @@ var queries = map[string]map[models.Direction]string{
 	},
 	"mysql": {
 		models.Up:   `CREATE TABLE IF NOT EXISTS {{.Name}} (id int(11) NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id))`,
-		models.Down: `DROP TABLE IF EXISTS {{.Name}}`,
-	},
-	"sqlite": {
-		models.Up:   `CREATE TABLE IF NOT EXISTS {{.Name}} (id integer PRIMARY KEY AUTOINCREMENT, name text)`,
 		models.Down: `DROP TABLE IF EXISTS {{.Name}}`,
 	},
 }
@@ -187,19 +182,4 @@ func (h *testHelper) initializeDrivers(t *testing.T) {
 	require.NoError(t, err)
 	h.drivers["mysql"] = mysqlDriver
 	h.dbInstances["mysql"] = db2
-
-	// sqlite
-	testDBFile, err := os.CreateTemp("", "morph-test.db")
-	require.NoError(t, err)
-	tfInfo, err := testDBFile.Stat()
-	require.NoError(t, err)
-	h.sqliteFile = filepath.Join(os.TempDir(), tfInfo.Name())
-
-	db3, err := sql.Open("sqlite", h.sqliteFile)
-	require.NoError(t, err)
-
-	sqliteDriver, err := sqlite.WithInstance(db3)
-	require.NoError(t, err)
-	h.drivers["sqlite"] = sqliteDriver
-	h.dbInstances["sqlite"] = db3
 }
